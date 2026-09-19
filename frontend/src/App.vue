@@ -24,9 +24,9 @@
         </el-form>
       </div>
 
-      <div v-if="store.result" class="results-grid">
+      <div class="results-grid">
         <SpectrumPlot />
-        <ConstellationPlot />
+        <ConstellationPlot v-if="store.result" />
       </div>
       <WaterfallPlot v-if="store.result" />
       <ModulationResult v-if="store.result" />

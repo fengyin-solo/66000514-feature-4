@@ -1,7 +1,7 @@
 import math
 import random
 import numpy as np
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -9,6 +9,10 @@ app = FastAPI(title="RF Signal Analyzer")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 MODULATION_TYPES = ["AM", "FM", "BPSK", "QPSK", "16QAM"]
+
+# Cache of the most recently computed spectrum, used by /api/measure so the
+# frequency cursor can be re-read after a page refresh or a failed request.
+_last_spectrum = None
 
 
 class GenerateRequest(BaseModel):
@@ -130,10 +134,13 @@ def classify_modulation(i: np.ndarray, q: np.ndarray) -> dict:
 
 @app.post("/api/generate")
 def generate_and_analyze(req: GenerateRequest):
+    global _last_spectrum
     i, q = generate_signal(req.modulation, req.samples, req.snr)
     freqs, mags = compute_fft(i, q)
     waterfall = compute_waterfall(i, q)
     modulation = classify_modulation(i, q)
+
+    _last_spectrum = {"frequencies": freqs, "magnitudes": mags}
 
     n = len(i)
     step = max(1, n // 200)
@@ -145,3 +152,18 @@ def generate_and_analyze(req: GenerateRequest):
         "constellation": constellation,
         "modulation": modulation
     }
+
+
+@app.get("/api/measure")
+def measure(freq: float = Query(..., description="目标频率 (Hz)")):
+    """Return the spectrum magnitude at the bin nearest to `freq`.
+
+    Used by the draggable frequency cursor. Returns 404 when no spectrum
+    has been computed yet so the frontend can surface a retryable error.
+    """
+    if not _last_spectrum:
+        raise HTTPException(status_code=404, detail="暂无可用的频谱数据，请先生成或导入信号")
+    freqs = np.asarray(_last_spectrum["frequencies"])
+    mags = _last_spectrum["magnitudes"]
+    idx = int(np.argmin(np.abs(freqs - freq)))
+    return {"frequency": float(freqs[idx]), "magnitude": float(mags[idx])}

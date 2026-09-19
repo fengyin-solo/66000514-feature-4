@@ -35,4 +35,9 @@ export interface AnalysisResult {
   modulation: ModulationResult
 }
 
+export interface CursorReading {
+  frequency: number
+  magnitude: number
+}
+
 export const MODULATION_TYPES = ['AM', 'FM', 'BPSK', 'QPSK', '16QAM']
