@@ -1,7 +1,12 @@
 <template>
   <div class="panel">
     <h3>⭐ 星座图 (IQ平面)</h3>
-    <canvas ref="cvs" width="300" height="300" class="const-canvas"></canvas>
+    <div class="canvas-wrap">
+      <canvas ref="cvs" width="300" height="300" class="const-canvas"></canvas>
+      <div v-if="!(store.result?.constellation?.length)" class="empty-mask">
+        <span>{{ store.error ? '数据读取失败，星座图暂不可用，请重试' : '暂无数据，请先生成信号' }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -38,5 +43,11 @@ watch(() => store.result, draw)
 <style scoped>
 .panel { background:#1a2332; border-radius:8px; padding:16px; border:1px solid #2a3a4a }
 .panel h3 { margin-bottom:8px; color:#90caf9; font-size:14px }
-.const-canvas { display:block; margin:0 auto; border-radius:4px }
+.canvas-wrap { position:relative; width:300px; margin:0 auto }
+.const-canvas { display:block; border-radius:4px }
+.empty-mask {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(13,21,32,0.72); border-radius:4px;
+}
+.empty-mask span { color:#8899aa; font-size:13px; text-align:center; padding:0 24px; line-height:1.6 }
 </style>

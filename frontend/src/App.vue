@@ -22,13 +22,26 @@
             <el-button type="primary" @click="generate" :loading="store.loading">🔍 生成信号并分析</el-button>
           </el-form-item>
         </el-form>
+        <el-alert
+          v-if="store.error"
+          class="error-alert"
+          type="error"
+          show-icon
+          :closable="false"
+          title="数据读取失败"
+          :description="`原因：${store.error}。可点击重试按钮使用相同参数重新发起读取。`"
+        >
+          <el-button size="small" type="danger" plain :loading="store.loading" @click="store.retry()">
+            🔄 重新发起读取
+          </el-button>
+        </el-alert>
       </div>
 
-      <div v-if="store.result" class="results-grid">
+      <div class="results-grid">
         <SpectrumPlot />
         <ConstellationPlot />
       </div>
-      <WaterfallPlot v-if="store.result" />
+      <WaterfallPlot />
       <ModulationResult v-if="store.result" />
     </main>
   </div>
@@ -55,5 +68,6 @@ body{font-family:system-ui,sans-serif;background:#0f1923;color:#e0e0e0}
 .subtitle{opacity:.7;margin-top:4px;font-size:.85rem}
 .app-main{padding:16px 40px}
 .control-card{background:#1a2332;border-radius:8px;padding:16px 20px;margin-bottom:16px;border:1px solid #2a3a4a}
+.error-alert{margin-top:12px;align-items:center}
 .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 </style>
